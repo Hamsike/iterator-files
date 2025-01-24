@@ -2,10 +2,10 @@ import os
 
 
 class iterator_files:
-    def __int__(self, start_path, dir, file, name=''):
+    def __init__(self, start_path, d, f, name):
         self.start_path = start_path
-        self.dir = dir
-        self.file = file
+        self.d = d
+        self.f = f
         self.name = name
 
     def __iter__(self):
@@ -16,8 +16,11 @@ class iterator_files:
                 for entry in os.scandir(current):
                     if entry.is_dir(follow_symlinks=False):
                         stack.append(entry.path)
+                        if self.d:
+                            yield entry.path
                     else:
-                        yield entry.path
+                        if self.f:
+                            yield entry.path
             except PermissionError:
                 print(f'Нет доступа к {current}')
 
@@ -32,4 +35,6 @@ class iterator_files:
 
 
 if __name__ == '__main__':
-    pass
+    itog = iterator_files('.', True, False, '')
+    for el in itog:
+        print(el)
