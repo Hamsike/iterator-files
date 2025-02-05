@@ -1,40 +1,44 @@
+import unittest
+from pathlib import Path
 import os
+import shutil
 
+class FileSystemIterator:
+    def __init__(self, root, only_files, only_dirs, pattern):
+        self.root = root
+        self.only_files = only_files
+        self.only_dirs = only_dirs
+        self.pattern = pattern
+        self._stack = self.stack()
 
-class iterator_files:
-    def __init__(self, start_path, d, f, name):
-        self.start_path = start_path
-        self.d = d
-        self.f = f
-        self.name = name
+        if self.root == self.only_files == self.only_dirs is None:
+            raise TypeError
+        if only_files and only_dirs:
+            raise ValueError
+        if self.root is None or not os.path.exists(root):
+            raise FileNotFoundError
+
+    def stack(self):
+        """Итерация по файлам и директориям"""
+        for directory, dirs, files in os.walk(self.root):
+            if self.only_files:
+                for file in files:
+                    if self.pattern is None or self.pattern in file:
+                        yield Path(directory) / file
+            elif self.only_dirs:
+                for dir in dirs:
+                    if self.pattern is None or self.pattern in dir:
+                        yield Path(directory) / dir
+            else:
+                for file in files:
+                    if self.pattern is None or self.pattern in file:
+                        yield Path(directory) / file
+                for dir in dirs:
+                    if self.pattern is None or self.pattern in dir:
+                        yield Path(directory) / dir
 
     def __iter__(self):
-        stack = [self.start_path]
-        while stack:
-            current = stack.pop()
-            try:
-                for entry in os.scandir(current):
-                    if entry.is_dir(follow_symlinks=False):
-                        stack.append(entry.path)
-                        if self.d:
-                            yield entry.path
-                    else:
-                        if self.f:
-                            yield entry.path
-            except:
-                print(f'Нет доступа к {current}')
+        return self
 
-    def only_dir(self):
-        pass
-
-    def only_files(self):
-        pass
-
-    def only_path_with_names(self):
-        pass
-
-
-if __name__ == '__main__':
-    itog = iterator_files('.', True, False, '')
-    for el in itog:
-        print(el)
+    def __next__(self):
+        return next(self._stack)
