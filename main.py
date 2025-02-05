@@ -21,7 +21,7 @@ class iterator_files:
                     else:
                         if self.f:
                             yield entry.path
-            except PermissionError:
+            except:
                 print(f'Нет доступа к {current}')
 
     def only_dir(self):
